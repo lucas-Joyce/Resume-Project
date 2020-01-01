@@ -1,5 +1,5 @@
 function userInformationHTML(user) {
-    return`
+    return `
     <h2>${user.name}
     <span class="small-name">
     (@<a href="${user.html_url}" target="_blank">${user.login}</a>)
@@ -15,24 +15,45 @@ function userInformationHTML(user) {
         Repos: ${user.public_repos}</p>
     </div>`;
 }
+function repoInformationHTML(repos) {
+    if (repos.lengh == 0) {
+        return `<div class="clearfix repo-list">No repos!</div>`;
+    }
+    var listItemsHTML = repos.map(function(repo) {
+        return `<li>
+        <a href="${repo.html_url}" target="_blank">${repo.name}</a>
+        </li>`;
+    });
+
+    return `<div class="clearfix repo-list">
+            <p><strong>Repo List:</strong></p>
+            <ul>
+            ${listItemsHTML.join("\n")}
+            </ul>
+            </div>`;
+}
+
+
 
 function fetchGitHubInformation(event) {
 
     var username = $("#gh-username").val();
 
     if (!username) {
-        $("#gh-user-data").html(`<h2>Please enter a GitHub username<h2>`);
+        $("#gh-user-data").html(`<h2>Please enter a GitHub username</h2>`);
         return;
     }
     $("#gh-user-data").html(`<div id="loader"><img src="assets/css/dog-fetching.gif" alt="loading..."/></div>`);
 
     $.when(
-        $.getJSON(`http://api.github.com/users/${username}`)
-        /*,$.getJSON(`http://api.github.com/users/${username}/repos`)*/
+        $.getJSON(`http://api.github.com/users/${username}`),
+        $.getJSON(`http://api.github.com/users/${username}/repos`)
         ).then(
-            function(response) {
-                var userData = response;
+            function(firstResponse, secondResponse) {
+                var userData = firstResponse[0];
+                var repoData = secondResponse[0];
                 $("#gh-user-data").html(userInformationHTML(userData));
+                $("#gh-repo-data").html(repoInformationHTML(repoData));
             }, function(errorResponse) {
                 if (errorResponse.status === 404) {
                     $("#gh-user-data").html(`<h2>No info found for user ${username}</h2>`);
